@@ -271,10 +271,10 @@
       <div class="map-note" id="map-note"></div>
     </div>
 
-    <!-- Story description -->
+    <!-- Growing Story (cumulative narrative) -->
     <div class="card">
-      <div class="card-label">The Story</div>
-      <div class="card-body" id="today-desc"></div>
+      <div class="card-label">The Growing Story</div>
+      <div class="card-body" id="growing-story"></div>
     </div>
 
     <button class="complete-btn" id="complete-btn" onclick="markStoryComplete()">Mark Story Complete ✓</button>
@@ -425,6 +425,70 @@ const EXTRAS = [
 
 const BST_READINGS = {"1":"Genesis 1:1-2:4","2":"Proverbs 8:1-36","3":"Proverbs 20:1-30, 1 John 1:1-2:6","4":"Genesis 2:5-25, Proverbs 4:14-27, 1 John 2:7-29","5":"Genesis 3:1-24, 1 John 3:1-10","6":"Genesis 4:1-26, 1 John 3:11-24","7":"Genesis 5:1-32, 1 John 4:1-6","8":"Genesis 6:1-22, 1 Chronicles 1:1-4","9":"Genesis 7:1-8:22","10":"Genesis 9:1-10:1, 1 John 4:7-21","11":"Genesis 10:2-20, 1 Chronicles 1:5-7, 1 John 5:1-21","12":"Genesis 10:21-30, 1 Chronicles 1:8-23, John 1:1-18","13":"Genesis 10:31-11:26, Matthew 1:1-17","14":"Genesis 11:27-12:20, 1 Chronicles 1:24-27, Luke 3:23-38","15":"Genesis 13:1-14:16","16":"Genesis 14:17-15:21","17":"Genesis 16:1-17:27, Luke 1:5-25","18":"Genesis 18:1-33, Luke 1:26-38","19":"Genesis 19:1-29, Luke 1:39-56","20":"Genesis 19:30-20:18, Proverbs 4:1-13, James 1:1-18","21":"Proverbs 17:1-28, James 1:19-27","22":"Genesis 21:1-34","23":"Proverbs 15:1-33","24":"Genesis 22:1-24, James 2:1-26","25":"Proverbs 10:1-32, James 3:1-18","26":"Genesis 23:1-20, Psalm 138:1-8, James 4:1-17","27":"Proverbs 13:1-25, James 5:1-12","28":"Psalm 107:1-43, James 5:13-20","29":"Genesis 24:1-28","30":"Genesis 24:29-67","31":"Genesis 25:1-26, 1 Chronicles 1:28-34, Luke 1:57-66","32":"Genesis 25:27-26:35, Luke 1:67-80","33":"Genesis 27:1-40, Matthew 1:18-25","34":"Genesis 27:41-28:22, Luke 2:1-7","35":"Genesis 29:1-30, Luke 2:8-20","36":"Genesis 29:31-30:24","37":"Genesis 30:25-31:21","38":"Genesis 31:22-55, Luke 2:21-40","39":"Genesis 32:1-32, Matthew 2:1-12","40":"Genesis 33:1-20, Matthew 2:13-23","41":"Genesis 34:1-31, Luke 2:41-52","42":"Genesis 35:1-29, Mark 1:1-8","43":"Genesis 36:1-30, 1 Chronicles 1:35-37","44":"Genesis 36:31-43, 1 Chronicles 1:38-2:2","45":"Genesis 37:1-36, Luke 3:1-18","46":"Genesis 38:1-30, 1 Chronicles 2:3-8, Matthew 3:1-12","47":"Genesis 39:1-23, Matthew 3:13-17, Mark 1:9-11","48":"Genesis 40:1-23, Luke 3:21-22, Mark 1:12-13","49":"Genesis 41:1-24, Matthew 4:1-11, Psalm 91:1-16","50":"Genesis 41:25-57","51":"Genesis 42:1-38","52":"Genesis 43:1-34, Luke 4:1-15","53":"Genesis 44:1-34, John 1:19-34","54":"Genesis 45:1-28, John 1:35-51","55":"Genesis 46:1-34, John 2:1-12","56":"Genesis 47:1-31, John 2:13-25","57":"Genesis 48:1-22","58":"Genesis 49:1-28","59":"Genesis 49:29-50:26, John 3:1-22","60":"Psalm 101:1-8, Job 1:1-22, John 3:23-36"};
 
+// Brief 1-2 sentence notes for each BST day showing how the scripture fits the redemption arc
+const SCRIPTURE_NOTES = {
+  "1": "The story begins with God speaking creation into being — the foundation for everything that follows. Every promise, every redemption thread starts here.",
+  "2": "Wisdom personified was with God at creation, delighting in humanity. This points forward to Christ, the Wisdom of God who would dwell among us.",
+  "3": "Proverbs warns of pride and folly; John declares Jesus as light who exposes darkness. Together they show our need for the Redeemer who is coming.",
+  "4": "Adam and Eve are placed in Eden in perfect fellowship with God — the baseline state that sin will shatter and Christ will restore.",
+  "5": "The fall: paradise lost, but God speaks the first promise of a Redeemer (Genesis 3:15) — the seed of the woman who will crush the serpent.",
+  "6": "Cain and Abel reveal sin's quick spread to murder, while John urges love over hatred. The contrast points to our desperate need for new hearts.",
+  "7": "Generations pass and death reigns — except for Enoch who walked with God. A glimmer that fellowship with God transcends even death.",
+  "8": "Humanity's wickedness grieves God, but Noah finds favor. Grace appears in the darkness — a pattern that runs all the way to the cross.",
+  "9": "The flood judges sin but the ark saves a remnant. This is the gospel pattern: judgment and salvation held together in God's mercy.",
+  "10": "God's covenant with Noah and the rainbow promise show His commitment to creation. John reminds us that perfect love comes from God Himself.",
+  "11": "The nations spread from Noah's sons — God is preparing the global stage on which the Redeemer will eventually be revealed.",
+  "12": "John opens with 'In the beginning was the Word' — connecting Genesis 1 directly to Jesus. He was there at creation; He is the Story.",
+  "13": "Babel scatters humanity in pride; Matthew's genealogy traces Jesus's lineage. God is already weaving the family line of the Savior.",
+  "14": "God calls Abram with a stunning promise: through him all nations will be blessed. This is the gospel announced 2,000 years before Christ.",
+  "15": "Abram trusts God's leading and rescues Lot. Faith begins to look like obedience that costs something.",
+  "16": "Abram believes God and it is credited as righteousness — the first clear glimpse of justification by faith, the heart of the gospel.",
+  "17": "Circumcision marks God's covenant family. Luke begins the New Testament birth narratives — John the Baptist's miraculous conception parallels Sarah's.",
+  "18": "Three visitors come to Abraham; the angel Gabriel comes to Mary. God draws near to deliver His promises personally.",
+  "19": "Sodom's destruction shows God's holiness; Mary's Magnificat celebrates a God who lifts up the humble. Both reveal His justice and mercy.",
+  "20": "Lot's daughters and Abraham's deception in Gerar show even covenant people fall. James reminds us trials test and refine our faith.",
+  "21": "Wisdom literature pauses the narrative — these proverbs and James's epistle teach how redeemed people are to live.",
+  "22": "Isaac is born — the laughter of promise fulfilled. God keeps His word even when it seems impossible.",
+  "23": "Practical wisdom for daily living. The redemption story isn't just events but a whole way of being human under God.",
+  "24": "Abraham offers Isaac on Mount Moriah — the clearest Old Testament picture of the Father offering His Son. James shows faith proven by works.",
+  "25": "Wisdom for the tongue and life — preparing God's people to be holy as the Redeemer's people will be.",
+  "26": "Sarah's burial and James on humility — even in grief and conflict, the covenant people are being shaped for the Kingdom.",
+  "27": "More wisdom and James on patience in suffering. The waiting is part of how God forms a redeemed people.",
+  "28": "A psalm of God's steadfast love and James on prayer — the covenant relationship is sustained by God's faithfulness and our calling on Him.",
+  "29": "A bride is sought for Isaac — pointing forward to Christ seeking His bride, the Church, from among the nations.",
+  "30": "Rebekah leaves home in faith to marry a man she's never met — a beautiful picture of the Church's call to follow Christ by faith.",
+  "31": "Jacob and Esau are born; John the Baptist is born. Two pairs of brothers, two new chapters in the redemption story.",
+  "32": "Zechariah's prophecy declares the dawn from on high is coming. The whole Old Testament is leaning toward this moment.",
+  "33": "Jacob steals the blessing through deception, yet God works through it. Matthew reveals Jesus is born to save people from sin — including liars and schemers.",
+  "34": "Jacob flees and dreams of a ladder to heaven; Jesus is born in Bethlehem. Both passages show heaven touching earth.",
+  "35": "Jacob meets Rachel; angels announce Jesus's birth to shepherds. God's biggest moments often arrive in the most ordinary places.",
+  "36": "The twelve sons of Israel are born — the foundation for the twelve tribes that will carry the promise toward Christ.",
+  "37": "Jacob prospers despite Laban's deception. God protects and provides for the covenant family no matter the obstacles.",
+  "38": "Jacob and Laban part with a covenant; baby Jesus is presented at the temple. God's faithfulness spans generations.",
+  "39": "Jacob wrestles with God and is renamed Israel; the Magi worship the newborn King. Both encounter the living God face to face.",
+  "40": "Jacob reconciles with Esau; Jesus's family flees to Egypt. The Redeemer's path includes both forgiveness and exile.",
+  "41": "Dinah is violated and Simeon and Levi take violent revenge; young Jesus astounds the temple teachers. Two contrasting visions of zeal.",
+  "42": "Jacob returns to Bethel; Mark introduces John the Baptist preparing the way. Returning to God is always part of the story.",
+  "43": "Esau's descendants are recorded — even those outside the covenant line are part of God's larger plan.",
+  "44": "More genealogy. Each name matters because God works through real people in real history toward His ultimate purpose.",
+  "45": "Joseph is sold into slavery by his brothers; John the Baptist preaches repentance. Both passages set up redemption through suffering.",
+  "46": "Judah and Tamar — a scandalous story that lands in Jesus's genealogy. God's grace covers even our messiest moments.",
+  "47": "Joseph resists temptation in Potiphar's house; Jesus is baptized and the Father declares His pleasure. Two pictures of faithful sons.",
+  "48": "Joseph interprets dreams in prison; Jesus is tested in the wilderness. Both face hardship before being lifted up to deliver others.",
+  "49": "Joseph stands before Pharaoh; Jesus stands against Satan's temptations. Psalm 91 promises God's protection — both prove it true.",
+  "50": "Joseph rises to second-in-command in Egypt — God's hidden hand bringing a deliverer to position before famine strikes.",
+  "51": "Joseph's brothers come for grain, not knowing him. We too come needy to a Brother we don't yet recognize as Savior.",
+  "52": "Joseph tests his brothers; Jesus begins His public ministry. Both reveal hearts to bring about repentance and restoration.",
+  "53": "Judah offers himself in place of Benjamin — a foreshadowing of Jesus, the Lion of Judah, taking our place on the cross.",
+  "54": "Joseph reveals himself to his brothers in tears; Jesus calls His first disciples. The Redeemer always seeks His own.",
+  "55": "Jacob's family moves to Egypt; Jesus turns water into wine. God provides at every stage and reveals His glory in unexpected ways.",
+  "56": "Joseph cares for his family in Egypt; Jesus cleanses the temple. Both protect what belongs to God.",
+  "57": "Jacob blesses Joseph's sons, crossing his hands to favor the younger — God's grace defies human expectations.",
+  "58": "Jacob blesses his twelve sons and prophesies that the scepter will not depart from Judah — pointing directly to King Jesus.",
+  "59": "Genesis closes with Joseph forgiving his brothers; John records Nicodemus learning of new birth. The Old gives way to the New.",
+  "60": "A psalm of integrity, Job's testing begins, and John the Baptist points to Jesus. The story keeps rising toward the Lamb of God."
+};
+
 // ── STATE ──────────────────────────────────────────────────────────
 const START_DATE = new Date('2026-04-30');
 let state = JSON.parse(localStorage.getItem('gs_state') || '{}');
@@ -564,11 +628,13 @@ function renderToday() {
   const showDays = bstDays.slice(0, Math.min(bstDays.length, 6));
   showDays.forEach(day => {
     const ref = BST_READINGS[day] || `BST Day ${day}`;
+    const note = SCRIPTURE_NOTES[day] || '';
     const done = state.storyProgress[si]?.includes(day);
     const li = document.createElement('li');
     li.className = 'reading-item' + (done ? ' done' : '');
-    li.innerHTML = `<div class="reading-check"></div><div class="reading-ref"><span style="font-size:11px;color:var(--rose-mid);font-family:sans-serif">Day ${day}</span><br>${ref}</div>`;
-    li.onclick = () => toggleReading(si, day, li);
+    const noteHtml = note ? `<div style="font-family:Georgia,serif;font-size:13px;line-height:1.5;color:var(--ink-mid);margin-top:8px;font-style:italic;padding-left:2px;border-left:2px solid var(--rose-lt);padding-left:10px;">${note}</div>` : '';
+    li.innerHTML = `<div class="reading-check"></div><div class="reading-ref"><span style="font-size:11px;color:var(--rose-mid);font-family:sans-serif">Day ${day}</span><br>${ref}${noteHtml}</div>`;
+    li.onclick = (e) => { if (e.target.closest('.reading-check') || e.target === li || e.target.classList.contains('reading-ref')) toggleReading(si, day, li); };
     list.appendChild(li);
   });
   if (bstDays.length > 6) {
@@ -586,8 +652,28 @@ function renderToday() {
   document.getElementById('map-loc').textContent = extras.map || '';
   document.getElementById('map-note').textContent = extras.mapNote || '';
 
-  // Description
-  document.getElementById('today-desc').textContent = desc;
+  // Growing Story (cumulative narrative — Day 1 through today)
+  const growingEl = document.getElementById('growing-story');
+  let cumulative = '';
+  for (let i = 0; i <= si; i++) {
+    const storyTitle = STORIES[i][0];
+    const storyDesc = STORIES[i][1];
+    const isCurrent = (i === si);
+    const titleStyle = isCurrent
+      ? 'color:var(--rose);font-weight:600;'
+      : 'color:var(--rose-dark);font-weight:500;';
+    const descStyle = isCurrent
+      ? 'color:var(--ink);'
+      : 'color:var(--ink-mid);';
+    cumulative += `
+      <div style="margin-bottom:18px;${isCurrent ? 'padding:12px;background:var(--rose-lt);border-radius:8px;margin-left:-12px;margin-right:-12px;' : ''}">
+        <div style="font-family:sans-serif;font-size:10px;letter-spacing:0.12em;color:var(--rose-mid);text-transform:uppercase;margin-bottom:4px;">Chapter ${i+1}${isCurrent ? ' • Today' : ''}</div>
+        <div style="font-family:Georgia,serif;font-style:italic;font-size:16px;line-height:1.3;${titleStyle}margin-bottom:6px;">${storyTitle}</div>
+        <div style="font-family:Georgia,serif;font-size:14px;line-height:1.6;${descStyle}">${storyDesc}</div>
+      </div>
+    `;
+  }
+  growingEl.innerHTML = cumulative;
 
   // Complete button
   const btn = document.getElementById('complete-btn');
