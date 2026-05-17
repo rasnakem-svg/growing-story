@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Growing Story">
+<meta name="theme-color" content="#C9736A">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Growing Story</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root { --cream: #FBF6EE; --rose: #C9736A; --rose-mid: #D4948C; --rose-lt: #F5E8E6; --rose-dark: #8A4F48; --ink: #3A3A3A; --ink-mid: #6B6B6B; --line: #E2D5CC; --gold: #C4965A; }
+  html, body { height: 100%; background: var(--cream); color: var(--ink); font-family: 'Georgia', serif; overflow: hidden; }
+  .screen { display: none; flex-direction: column; height: 100dvh; overflow: hidden; }
+  .screen.active { display: flex; }
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 8px; background: var(--cream); border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .nav-title { font-size: 13px; color: var(--rose); letter-spacing: 0.08em; font-family: sans-serif; font-weight: 500; }
+  .nav-btn { background: none; border: none; color: var(--rose); font-size: 20px; cursor: pointer; padding: 4px 8px; }
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 24px 24px 40px; }
+  .story-number { font-family: sans-serif; font-size: 11px; letter-spacing: 0.12em; color: var(--rose-mid); text-transform: uppercase; margin-bottom: 6px; }
+  .story-title { font-size: 28px; color: var(--rose); line-height: 1.25; margin-bottom: 4px; font-style: italic; }
+  .date-line { font-family: sans-serif; font-size: 13px; color: var(--ink-mid); margin-bottom: 20px; }
+  .card { background: white; border-radius: 16px; border: 1px solid var(--line); padding: 18px 20px; margin-bottom: 16px; }
+  .card-label { font-family: sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rose-mid); margin-bottom: 8px; }
+  .card-body { font-size: 15px; line-height: 1.7; color: var(--ink); }
+  .card-body.verse { font-style: italic; font-size: 16px; color: var(--rose-dark); line-height: 1.6; }
+  .readings-list { list-style: none; }
+  .reading-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .reading-item:last-child { border-bottom: none; }
+  .reading-check { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--rose-mid); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-top: 2px; background: white; }
+  .reading-item.done .reading-check { background: var(--rose); border-color: var(--rose); }
+  .reading-item.done .reading-check::after { content: '✓'; color: white; font-size: 13px; font-family: sans-serif; }
+  .reading-item.done .reading-ref { text-decoration: line-through; color: var(--ink-mid); }
+  .reading-item.done .verse-summary { opacity: 0.6; }
+  .reading-ref { font-size: 14px; line-height: 1.5; color: var(--ink); margin-bottom: 6px; }
+  .verse-summary { background: #FBF6EE; border-left: 3px solid var(--gold); padding: 10px 12px; margin-top: 6px; border-radius: 6px; font-size: 13px; line-height: 1.6; color: var(--rose-dark); }
+  .verse-summary-label { font-family: sans-serif; font-size: 9px; color: var(--rose-mid); margin-bottom: 4px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .char-name { font-size: 15px; font-weight: bold; color: var(--rose-dark); margin-bottom: 6px; font-style: italic; }
+  .map-loc { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .map-loc-name { font-family: sans-serif; font-size: 14px; font-weight: 500; color: var(--rose-dark); }
+  .map-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rose); flex-shrink: 0; }
+  .map-note { font-size: 13px; color: var(--ink-mid); line-height: 1.5; }
+  .symbol-box { text-align: center; padding: 20px 0 8px; }
+  .symbol-svg { width: 80px; height: 80px; }
+  .progress-wrap { margin: 4px 0 20px; }
+  .progress-bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--rose); border-radius: 2px; transition: width 0.5s; }
+  .progress-label { font-family: sans-serif; font-size: 11px; color: var(--ink-mid); margin-top: 5px; text-align: right; }
+  .complete-btn { width: 100%; padding: 16px; border-radius: 14px; background: var(--rose); color: white; border: none; font-size: 16px; font-family: 'Georgia', serif; font-style: italic; cursor: pointer; margin-top: 8px; transition: background 0.2s, transform 0.1s; }
+  .complete-btn:active { transform: scale(0.98); }
+  .complete-btn.done { background: var(--rose-mid); }
+  .sofar-header { text-align: center; padding: 20px 0 16px; }
+  .sofar-title { font-size: 32px; color: var(--rose); font-style: italic; }
+  .sofar-subtitle { font-family: sans-serif; font-size: 12px; color: var(--rose-mid); letter-spacing: 0.1em; margin-top: 4px; }
+  .sofar-divider { width: 60px; height: 1px; background: var(--rose-mid); margin: 16px auto; }
+  .sofar-text { font-size: 15px; line-height: 1.85; color: var(--ink); }
+  .cross-symbol { text-align: center; font-size: 36px; color: var(--rose); margin: 28px 0 8px; }
+  .story-row { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .story-row:last-child { border-bottom: none; }
+  .story-row-num { font-family: sans-serif; font-size: 11px; color: var(--rose-mid); min-width: 24px; padding-top: 2px; text-align: right; }
+  .story-row-content { flex: 1; }
+  .story-row-title { font-size: 15px; font-style: italic; color: var(--rose-dark); line-height: 1.3; }
+  .story-row-days { font-family: sans-serif; font-size: 11px; color: var(--ink-mid); margin-top: 3px; }
+  .story-row-tick { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .story-row.completed .story-row-tick { background: var(--rose); border-color: var(--rose); color: white; }
+  .story-row.current { background: var(--rose-lt); margin: 0 -24px; padding: 14px 24px; }
+  .story-row.current .story-row-title { color: var(--rose); }
+  .sermon-upload-card { background: linear-gradient(135deg, var(--rose-lt) 0%, white 100%); border: 2px dashed var(--rose); border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: center; }
+  .sermon-upload-label { font-size: 12px; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.08em; color: var(--rose-dark); margin-bottom: 8px; font-weight: 600; }
+  .sermon-upload-btn { background: var(--rose); color: white; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-family: sans-serif; cursor: pointer; transition: all 0.2s; }
+  .sermon-upload-btn:hover { background: var(--rose-dark); }
+  #sermonFileInput { display: none; }
+  .tab-bar { display: flex; background: var(--cream); border-top: 1px solid var(--line); flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 0); }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0 8px; cursor: pointer; border: none; background: none; color: var(--ink-mid); font-family: sans-serif; font-size: 10px; gap: 3px; letter-spacing: 0.04em; text-transform: uppercase; transition: color 0.15s; }
+  .tab.active { color: var(--rose); }
+  .tab-icon { font-size: 20px; line-height: 1; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-today">
+  <div class="nav"><span class="nav-title">THE GROWING STORY</span><div style="display: flex; gap: 8px;"><button class="nav-btn" onclick="showSoFar()" title="Story Summary">†</button><button class="nav-btn" onclick="showPlan()" title="All Stories">≡</button></div></div>
+  <div class="scroll" id="today-scroll">
+    <div class="sermon-upload-card"><div class="sermon-upload-label">📝 Add Sermon Commentary</div><button class="sermon-upload-btn" onclick="document.getElementById('sermonFileInput').click()">Upload Sermon Verses</button><input type="file" id="sermonFileInput" accept=".json" onchange="handleSermonUpload(event)"></div>
+    <div class="story-number" id="today-story-num"></div>
+    <div class="story-title" id="today-title"></div>
+    <div class="date-line" id="today-date"></div>
+    <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div><div class="progress-label" id="progress-label"></div></div>
+    <div class="symbol-box"><svg class="symbol-svg" id="symbol-svg" viewBox="0 0 80 80"></svg></div>
+    <div class="card"><div class="card-label">Key Verse</div><div class="card-body verse" id="today-verse"></div></div>
+    <div class="card"><div class="card-label">Today's Readings</div><ul class="readings-list" id="readings-list"></ul></div>
+    <div class="card"><div class="card-label">Character Spotlight</div><div class="char-name" id="char-name"></div><div class="card-body" id="char-portrait"></div></div>
+    <div class="card"><div class="card-label">Where It Happened</div><div class="map-loc"><div class="map-dot"></div><div class="map-loc-name" id="map-loc"></div></div><div class="map-note" id="map-note"></div></div>
+    <div class="card"><div class="card-label">The Story</div><div class="card-body" id="today-desc"></div></div>
+    <button class="complete-btn" id="complete-btn" onclick="markStoryComplete()">Mark Story Complete ✓</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-sofar">
+  <div class="nav"><button class="nav-btn" onclick="showToday()">←</button><span class="nav-title">THE STORY SO FAR</span><span style="width:40px"></span></div>
+  <div class="scroll"><div class="sofar-header"><div class="sofar-title">The Story So Far</div><div class="sofar-subtitle">YOUR GROWING NARRATIVE</div></div><div class="sofar-divider"></div><div class="sofar-text" id="sofar-text"></div><div class="cross-symbol">†</div></div>
+</div>
+
+<div class="screen" id="screen-plan">
+  <div class="nav"><button class="nav-btn" onclick="showToday()">←</button><span class="nav-title">ALL STORIES</span><span style="width:40px"></span></div>
+  <div class="scroll"><div id="plan-list"></div></div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showToday()"><span class="tab-icon">📖</span><span>Today</span></button>
+  <button class="tab" onclick="showSoFar()"><span class="tab-icon">†</span><span>Summary</span></button>
+  <button class="tab" onclick="showPlan()"><span class="tab-icon">≡</span><span>Stories</span></button>
+</div>
+
+<script>
+const STORIES = [
+  ["In the Beginning: God Creates","God speaks creation into being. Humanity alone is made in His image.",[1,2,3,4]],
+  ["The Fall: Sin Enters the World","The serpent's lie shatters paradise. Yet God plants the first promise of a Deliverer.",[5,6,7]],
+  ["Noah: Judgment and Grace","God finds one righteous man. The floodwaters preserve Noah's family. A covenant is sealed with a rainbow.",[8,9,10]],
+  ["Babel: Pride and Scattering","Humanity gathers to make a name for themselves. God confuses their languages.",[11,12,13]],
+  ["Abram: Called Out by Faith","God calls one man to leave everything by faith. Abram believes and it is credited as righteousness.",[14,15,16]],
+  ["Abraham: The Covenant Sealed","God cuts an eternal covenant. He changes Abram's name to Abraham, father of nations.",[17,18,19,20,21]],
+  ["Isaac: The Son of Laughter","Against impossible odds, Isaac is born. God tests Abraham's faith at Mount Moriah, then provides a sacrifice.",[22,23,24,25]],
+  ["A Bride for Isaac","Abraham's servant finds Rebekah—a portrait of the Church being pursued by Christ.",[26,27,28,29,30]],
+  ["Jacob and Esau: The Birthright","Twin brothers struggle. Esau sells his birthright. Jacob steals the blessing. God works through human deception.",[31,32,33,34]],
+  ["Jacob's Ladder: A Dream at Bethel","Jacob dreams of heaven opened. At his lowest moment, God renews the covenant over him.",[35]],
+  ["Jacob and Laban: Twenty Years","Jacob works fourteen years for Rachel. Twelve sons are born. He finally escapes.",[36,37,38,39,40,41]],
+  ["Jacob Wrestles with God","Jacob wrestles God himself through the night. He refuses to release without a blessing. He is renamed Israel.",[42,43,44]],
+  ["Joseph: The Dreamer Betrayed","Joseph's brothers sell him. They dip his coat in blood. The dreamer descends into slavery.",[45,46]],
+  ["Joseph: Faithful in the Pit","Joseph rises in Potiphar's house until false accusation lands him in prison. God prospers him.",[47,48,49,50]],
+  ["Joseph: From Prison to Palace","Pharaoh dreams what no one can interpret. Joseph becomes second-in-command of Egypt.",[51,52]],
+  ["Joseph: The Brothers Reunited","The brothers bow before Joseph. He reveals himself and forgives them. God's providence is over all.",[53,54,55,56,57,58,59,60]],
+  ["Job: A Righteous Man's Suffering","Job loses everything yet refuses to curse God. His friends debate suffering. God answers with questions. Job worships.",[61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96]],
+  ["Moses: Born for This Moment","A Hebrew baby becomes Pharaoh's son, flees to the desert. At a burning bush: I AM will send you.",[97,98,99,100]],
+  ["The Plagues: Darkness Over Egypt","Moses stands before Pharaoh. Plague after plague proves the God of Israel reigns over all.",[101,102,103,104,105,106,107]],
+  ["Passover: The Night Everything Changed","A lamb's blood marks doorposts. Death passes over. Israel walks out of 400 years of bondage.",[108,109,110]],
+  ["Crossing the Red Sea","Israel is trapped. Moses lifts his staff. The water divides. They cross on dry ground.",[111,112]],
+  ["The Wilderness: Manna and Grumbling","God provides manna, quail, and water from a rock. The wilderness forges trust—or breaks it.",[113,114]],
+  ["Mount Sinai: The Law Given","The mountain shakes with fire. God speaks the Ten Commandments.",[115,116,117,118,119]],
+  ["The Tabernacle: God's Blueprint","God gives detailed instructions for a portable sanctuary. Every detail is intentional.",[120,121,122,123,124,125,126,127]],
+  ["The Golden Calf: Betrayal at Sinai","The people demand gods they can see. Moses intercedes: blot me out instead of them.",[128,129,130]],
+  ["Leviticus: Priesthood, Sacrifice, and Holiness","Aaron is consecrated. Offerings reveal costly grace. The Holiness Code brings all of life under God's character.",[131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167]],
+  ["Numbers and Deuteronomy: The Journey and the Law","The wilderness tests Israel. Spies return terrified. Only Caleb and Joshua trust. Moses retells everything.",[168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205]],
+  ["Balaam, Joshua, and Conquest","A prophet's curses become blessings. Joshua conquers Canaan. The sun stands still.",[206,207,208,209,210,211,212,213,214,215,216,217,218,219]],
+  ["Judges and Ruth: Cycles and Redemption","Israel cycles through sin and rescue. Deborah leads. Gideon defeats thousands. Ruth's kinsman-redeemer prefigures Christ.",[220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305]],
+  ["Samuel and David: The Shepherd King","Hannah's prayer births Samuel. David faces Goliath. He flees Saul, pouring out his soul in psalms.",[306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345]],
+  ["David's Kingdom and Fall","David unites Israel and brings the Ark to Jerusalem. God promises an eternal throne. David's sin fractures his family.",[346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391]],
+  ["Solomon, Ecclesiastes, and the Kingdom Divides","Solomon builds the Temple. His foreign wives turn his heart away. Rehoboam's arrogance tears the nation.",[392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427]],
+  ["Elijah, Elisha, and the Prophets","Fire falls at Mount Carmel. Elijah hears God's still small voice. Elisha performs twice as many miracles.",[428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468]],
+  ["The Great Prophets: Isaiah, Jeremiah, and Lamentations","Isaiah sees the Lord high and lifted up. Jeremiah preaches for forty years without convert. Jerusalem falls. Hope remains in God's mercy.",[469,470,471,472,473,474,475,476,477,478,479,480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,495,496,497,498,499,500,501,502,503,504,505,506,507,508,509,510,511,512,513,514,515,516,517,518,519,520,521,522,523,524,525,526,527,528,529,530]],
+  ["The Exile and Return: Ezra and Nehemiah","The Babylonians destroy Jerusalem. Cyrus decrees return. Ezra leads back. Nehemiah rebuilds the walls in 52 days.",[531,532,533,534,535,536,537,538,539,540,541,542,543,544,545,546,547,548,549,550,551,552,553,554,555,556,557,558,559,560,561,562,563,564,565,566,567,568,569,570,571,572,573,574,575,576,577,578,579,580,581,582,583,584,585,586,587,588,589,590,591,592,593,594,595,596,597,598,599,600,601,602,603,604,605,606,607,608,609,610,611,612,613,614,615,616,617,618,619,620,621,622,623,624,625,626,627,628,629,630,631,632,633,634,635,636,637,638,639,640,641]],
+  ["The Gospels: Jesus Arrives, Ministry, Death, and Resurrection","Jesus is born, baptized, tempted, calls disciples, teaches the Sermon on the Mount, performs miracles, is crucified and resurrected. The early church is born. Paul writes letters. John sees the Revelation of Jesus Christ. All things are made new.",[642,643,644,645,646,647,648,649,650,651,652,653,654,655,656,657,658,659,660,661,662,663,664,665,666,667,668,669,670,671,672,673,674,675,676,677,678,679,680,681,682,683,684,685,686,687,688,689,690,691,692,693,694,695,696,697,698,699,700,701,702,703,704,705,706,707,708,709,710,711,712,713,714,715,716,717,718,719,720,721,722,723,724,725,726,727,728,729,730]],
+];
+
+const EXTRAS = [{verse:"In the beginning God created the heavens and the earth. — Genesis 1:1",character:"Adam and Eve",portrait:"Created in God's image as equals, made for eternal relationship with each other and their Maker. They are the crown of creation.",map:"The Garden of Eden",mapNote:"East of Eden, in the fertile region between the Tigris and Euphrates rivers.",symbol:"sun"}];
+
+const VERSE_SUMMARIES = {"1":"God spoke creation into being with divine purpose. Each day's work demonstrates intentional design. Humanity is made in His image.","2":"Wisdom calls out publicly, offering understanding to all. She is more valuable than silver and brings life to those who find her.","3":"Wisdom lies in recognizing life's patterns. Jesus the Word is the light; His blood cleanses us from all sin.","4":"God planted a garden and made woman as man's equal companion. Guard your heart; love one another.","5":"The serpent deceives; sin enters the story. Yet God promises a Deliverer. See what love the Father gives us.","6":"Cain's jealousy leads to murder. God grieves but protects. Love one another, not like Cain.","7":"Adam's line is traced through generations. Enoch walks with God and is taken without death. Test the spirits.","8":"Wickedness increases; God judges. Noah finds grace. God commands an ark—a call requiring faith.","9":"The flood covers the earth. A dove returns with an olive leaf—a sign of new life.","10":"God blesses Noah's sons. A covenant is established with a rainbow. Love comes from God.","11":"Nations establish themselves. Everyone who believes Jesus is born of God. Faith overcomes the world.","12":"Shem's line includes the Hebrews. The Word was with God and was God from the beginning.","13":"Babel represents human pride. God scatters them. Jesus' genealogy traces from Abraham.","14":"Abram is called by faith. God promises to make him a great nation. Luke traces Jesus back to Adam.","15":"Abram and Lot separate. Abram rescues Lot, showing courage and loyalty despite their parting.","16":"Melchizedek blesses Abram. Abram believes God, and it is credited as righteousness.","17":"Sarai offers Hagar. God changes Abram to Abraham. Zechariah will have John the Baptist.","18":"Three visitors announce Isaac's birth. Mary accepts God's plan with faith.","19":"Sodom is destroyed. Mary visits Elizabeth; babies leap in recognition.","20":"Lot's daughters preserve his line. Wisdom is life's greatest treasure. Trials develop perseverance.","21":"Better peace than strife. Religion that matters helps the orphaned and widowed.","22":"Isaac is born. Ishmael is sent away but God cares for him.","23":"A soft answer turns away wrath. The wise restrain anger.","24":"God tests Abraham; he obeys. God provides the sacrifice. Faith without works is dead.","25":"A wise son brings joy. The tongue is small but powerful.","26":"Sarah dies. Abraham purchases burial place—the first land claim.","27":"Hard work brings profit. Be patient in suffering.","28":"Give thanks for the Lord's enduring love. Prayer is powerful.","29":"Abraham's servant finds Rebekah—kind and hospitable.","30":"Rebekah chooses to go immediately. Isaac loves her deeply.","31":"Jacob deceives his father for the blessing. John the Baptist is born.","32":"Jacob sells his birthright. Zechariah prophesies about John.","33":"Jacob gains the blessing. Joseph is a righteous man.","34":"Jacob dreams of a ladder. Jesus is born in Bethlehem.","35":"Jacob loves Rachel. Shepherds are told the Messiah is born.","36":"Leah bears sons; Rachel finally bears Joseph.","37":"Jacob prospers and leaves with his family.","38":"Laban pursues but is warned. Jesus is circumcised and presented.","39":"Jacob wrestles God and is renamed Israel. Wise men visit Jesus.","40":"Esau embraces Jacob. Joseph flees to Egypt.","41":"Dinah is defiled. Jesus astounds teachers with His knowledge.","42":"Jacob builds an altar at Bethel. John baptizes in the wilderness.","43":"Esau's descendants prosper in Seir.","44":"Edom's kings establish themselves.","45":"Joseph dreams and is sold into slavery. John calls for repentance.","46":"Judah and Tamar; Perez is born. John appears calling for repentance.","47":"Joseph prospers then is imprisoned. Jesus is baptized; heavens open.","48":"Joseph interprets dreams. The Spirit drives Jesus into wilderness.","49":"Joseph interprets Pharaoh's dreams. Jesus resists all temptations.","50":"Joseph becomes second-in-command of Egypt.","51":"Jacob sends his sons to Egypt. Joseph tests them harshly.","52":"Jacob's family returns with Benjamin. Jesus returns in the Spirit's power.","53":"Judah offers himself as a slave. John testifies Jesus is the Lamb of God.","54":"Joseph reveals himself and weeps. John's disciples follow Jesus.","55":"God assures Jacob He will go to Egypt. Jesus turns water into wine.","56":"Jacob blesses Pharaoh. Jesus cleanses the temple.","57":"Jacob blesses Joseph's sons with crossed hands.","58":"Jacob blesses his sons; Judah will have the scepter.","59":"Joseph's faithfulness continues. Nicodemus learns about being born again.","60":"The psalmist commits to integrity. Job loses everything but refuses to curse God. John testifies Jesus is the bridegroom."};
+
+const BST_READINGS = {"1":"Genesis 1:1-2:4","2":"Proverbs 8:1-36","3":"Proverbs 20:1-30, 1 John 1:1-2:6","4":"Genesis 2:5-25, Proverbs 4:14-27, 1 John 2:7-29","5":"Genesis 3:1-24, 1 John 3:1-10","6":"Genesis 4:1-26, 1 John 3:11-24","7":"Genesis 5:1-32, 1 John 4:1-6","8":"Genesis 6:1-22, 1 Chronicles 1:1-4","9":"Genesis 7:1-8:22","10":"Genesis 9:1-10:1, 1 John 4:7-21","11":"Genesis 10:2-20, 1 Chronicles 1:5-7, 1 John 5:1-21","12":"Genesis 10:21-30, 1 Chronicles 1:8-23, John 1:1-18, Luke 1:1-4","13":"Genesis 10:31-11:26, Matthew 1:1-17","14":"Genesis 11:27-12:20, 1 Chronicles 1:24-27, Luke 3:23-38","15":"Genesis 13:1-14:16","16":"Genesis 14:17-15:21","17":"Genesis 16:1-17:27, Luke 1:5-25","18":"Genesis 18:1-33, Luke 1:26-38","19":"Genesis 19:1-29, Luke 1:39-56","20":"Genesis 19:30-20:18, Proverbs 4:1-13, James 1:1-18","21":"Proverbs 17:1-28, James 1:19-27","22":"Genesis 21:1-34","23":"Proverbs 15:1-33","24":"Genesis 22:1-24, James 2:1-26","25":"Proverbs 10:1-32, James 3:1-18","26":"Genesis 23:1-20, Psalm 138:1-8, James 4:1-17","27":"Proverbs 13:1-25, James 5:1-12","28":"Psalm 107:1-43, James 5:13-20","29":"Genesis 24:1-28","30":"Genesis 24:29-67","31":"Genesis 25:1-26, 1 Chronicles 1:28-34, Luke 1:57-66","32":"Genesis 25:27-26:35, Luke 1:67-80","33":"Genesis 27:1-40, Matthew 1:18-25","34":"Genesis 27:41-28:22, Luke 2:1-7","35":"Genesis 29:1-30, Luke 2:8-20","36":"Genesis 29:31-30:24","37":"Genesis 30:25-31:21","38":"Genesis 31:22-55, Luke 2:21-40","39":"Genesis 32:1-32, Matthew 2:1-12","40":"Genesis 33:1-20, Matthew 2:13-23","41":"Genesis 34:1-31, Luke 2:41-52","42":"Genesis 35:1-29, Mark 1:1-8","43":"Genesis 36:1-30, 1 Chronicles 1:35-37","44":"Genesis 36:31-43, 1 Chronicles 1:38-2:2","45":"Genesis 37:1-36, Luke 3:1-18","46":"Genesis 38:1-30, 1 Chronicles 2:3-8, Matthew 3:1-12","47":"Genesis 39:1-23, Matthew 3:13-17, Mark 1:9-11","48":"Genesis 40:1-23, Luke 3:21-22, Mark 1:12-13","49":"Genesis 41:1-24, Matthew 4:1-11, Psalm 91:1-16","50":"Genesis 41:25-57","51":"Genesis 42:1-38","52":"Genesis 43:1-34, Luke 4:1-15","53":"Genesis 44:1-34, John 1:19-34","54":"Genesis 45:1-28, John 1:35-51","55":"Genesis 46:1-34, John 2:1-12","56":"Genesis 47:1-31, John 2:13-25","57":"Genesis 48:1-22","58":"Genesis 49:1-28","59":"Genesis 49:29-50:26, John 3:1-22","60":"Psalm 101:1-8, Job 1:1-22, John 3:23-36"};
+
+let state = JSON.parse(localStorage.getItem('gs_state') || '{}');
+if (!state.completed) state.completed = {};
+if (!state.storyProgress) state.storyProgress = {};
+if (!state.sermonCommentary) state.sermonCommentary = {};
+
+function saveState() { localStorage.setItem('gs_state', JSON.stringify(state)); }
+
+function handleSermonUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.verses && Array.isArray(data.verses)) {
+        data.verses.forEach(item => { state.sermonCommentary[item.verse] = item.commentary; });
+        saveState();
+        renderToday();
+        alert(`✓ Added ${data.verses.length} sermon commentaries!`);
+      }
+    } catch (err) { alert('Error reading file. Make sure it\'s a valid JSON export.'); }
+  };
+  reader.readAsText(file);
+}
+
+function getSermonCommentary(verseRef) {
+  if (state.sermonCommentary[verseRef]) return state.sermonCommentary[verseRef];
+  for (let key in state.sermonCommentary) {
+    if (verseRef.includes(key) || key.includes(verseRef)) return state.sermonCommentary[key];
+  }
+  return null;
+}
+
+function getCurrentStoryIndex() {
+  for (let i = 0; i < STORIES.length; i++) {
+    if (!state.completed[i]) return i;
+  }
+  return STORIES.length - 1;
+}
+
+function drawSymbol(svgEl, type) {
+  const rose = '#C9736A';
+  const cx = 40, cy = 40;
+  let html = '';
+  if (type === 'sun') {
+    html = `<circle cx="${cx}" cy="${cy}" r="16" fill="${rose}" opacity="0.9"/>${[0,45,90,135,180,225,270,315].map(a => {
+      const rad = a * Math.PI/180;
+      const x1 = cx + Math.cos(rad)*19, y1 = cy + Math.sin(rad)*19;
+      const x2 = cx + Math.cos(rad)*28, y2 = cy + Math.sin(rad)*28;
+      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${rose}" stroke-width="2.5" stroke-linecap="round"/>`;
+    }).join('')}`;
+  } else {
+    html = `<rect x="36" y="14" width="8" height="52" rx="2" fill="${rose}"/><rect x="16" y="30" width="48" height="8" rx="2" fill="${rose}"/>`;
+  }
+  svgEl.innerHTML = html;
+}
+
+function renderToday() {
+  const si = getCurrentStoryIndex();
+  const [title, desc, bstDays] = STORIES[si];
+  const extras = EXTRAS[0] || {};
+
+  document.getElementById('today-story-num').textContent = `Story ${si+1} of ${STORIES.length}`;
+  document.getElementById('today-title').textContent = title;
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  document.getElementById('today-date').textContent = dateStr;
+
+  const completed = Object.keys(state.completed).length;
+  const pct = Math.round((completed / STORIES.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${completed} of ${STORIES.length} stories read`;
+
+  drawSymbol(document.getElementById('symbol-svg'), extras.symbol || 'cross');
+  document.getElementById('today-verse').textContent = extras.verse || '';
+
+  const list = document.getElementById('readings-list');
+  list.innerHTML = '';
+  const showDays = bstDays.slice(0, Math.min(bstDays.length, 6));
+  showDays.forEach(day => {
+    const ref = BST_READINGS[day] || `BST Day ${day}`;
+    const done = state.storyProgress[si]?.includes(day);
+    const li = document.createElement('li');
+    li.className = 'reading-item' + (done ? ' done' : '');
+    
+    const sermonCommentary = getSermonCommentary(ref);
+    const summary = sermonCommentary || VERSE_SUMMARIES[day];
+    const summaryHtml = summary ? `<div class="verse-summary"><div class="verse-summary-label">${sermonCommentary ? 'Your Sermon' : 'Summary'}</div>${summary}</div>` : '';
+    
+    li.innerHTML = `<div class="reading-check"></div><div style="flex:1"><div class="reading-ref"><span style="font-size:11px;color:var(--rose-mid);font-family:sans-serif">Day ${day}</span><br>${ref}</div>${summaryHtml}</div>`;
+    li.onclick = () => toggleReading(si, day, li);
+    list.appendChild(li);
+  });
+  
+  if (bstDays.length > 6) {
+    const more = document.createElement('li');
+    more.className = 'reading-item';
+    more.innerHTML = `<div class="reading-check"></div><div class="reading-ref" style="color:var(--ink-mid);font-style:italic">+ ${bstDays.length - 6} more readings in this story</div>`;
+    list.appendChild(more);
+  }
+
+  document.getElementById('char-name').textContent = extras.character || '';
+  document.getElementById('char-portrait').textContent = extras.portrait || '';
+  document.getElementById('map-loc').textContent = extras.map || '';
+  document.getElementById('map-note').textContent = extras.mapNote || '';
+  document.getElementById('today-desc').textContent = desc;
+
+  const btn = document.getElementById('complete-btn');
+  if (state.completed[si]) {
+    btn.textContent = '✓ Story Complete';
+    btn.classList.add('done');
+  } else {
+    btn.textContent = 'Mark Story Complete ✓';
+    btn.classList.remove('done');
+  }
+
+  updateTabs('today');
+}
+
+function toggleReading(si, day, el) {
+  if (!state.storyProgress[si]) state.storyProgress[si] = [];
+  const idx = state.storyProgress[si].indexOf(day);
+  if (idx > -1) {
+    state.storyProgress[si].splice(idx, 1);
+    el.classList.remove('done');
+  } else {
+    state.storyProgress[si].push(day);
+    el.classList.add('done');
+  }
+  saveState();
+}
+
+function markStoryComplete() {
+  const si = getCurrentStoryIndex();
+  if (state.completed[si]) {
+    delete state.completed[si];
+  } else {
+    state.completed[si] = true;
+    state.storyProgress[si] = STORIES[si][2].slice();
+  }
+  saveState();
+  renderToday();
+}
+
+function renderSoFar() {
+  const si = getCurrentStoryIndex();
+  const sentences = [];
+  for (let i = 0; i <= si; i++) {
+    const desc = STORIES[i][1];
+    const first = desc.split('.')[0].trim() + '.';
+    sentences.push(first);
+  }
+  document.getElementById('sofar-text').textContent = sentences.join(' ');
+  updateTabs('sofar');
+}
+
+function renderPlan() {
+  const si = getCurrentStoryIndex();
+  const container = document.getElementById('plan-list');
+  container.innerHTML = '';
+  STORIES.forEach(([title,,days], i) => {
+    const done = state.completed[i];
+    const current = i === si;
+    const div = document.createElement('div');
+    div.className = 'story-row' + (done ? ' completed' : '') + (current ? ' current' : '');
+    div.innerHTML = `<div class="story-row-num">${i+1}</div><div class="story-row-content"><div class="story-row-title">${title}</div><div class="story-row-days">${days.length} days</div></div><div class="story-row-tick">${done ? '✓' : ''}</div>`;
+    div.onclick = () => goToStory(i);
+    container.appendChild(div);
+  });
+  updateTabs('plan');
+}
+
+function goToStory(index) {
+  state.completed = {};
+  for (let i = 0; i < index; i++) { state.completed[i] = true; }
+  saveState();
+  showToday();
+}
+
+function showToday() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-today').classList.add('active');
+  renderToday();
+}
+
+function showSoFar() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-sofar').classList.add('active');
+  renderSoFar();
+}
+
+function showPlan() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-plan').classList.add('active');
+  renderPlan();
+}
+
+function updateTabs(active) {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  const screens = ['today', 'sofar', 'plan'];
+  const idx = screens.indexOf(active);
+  if (idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
+}
+
+showToday();
+</script>
+</body>
+</html>
